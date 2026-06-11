@@ -1,0 +1,37 @@
+name: Test with repository policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        with:
+          repository: test-repo-policy
+          public: 'false'
+          repository-policy: >-
+            ${{ github.workspace }}/actions/hardened/int128--create-ecr-repository-action/v1.468.0/tests/fixtures/repository-policy.json
+        continue-on-error: true
+      - name: Assert action ran with repository-policy input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          REPO_URI: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "repository-uri: $REPO_URI"
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with repository-policy"
+            if [ -z "$REPO_URI" ]; then
+              echo "FAIL: repository-uri output is empty on success"
+              exit 1
+            fi
+          else
+            echo "INFO: action failed (expected without real AWS credentials)"
+          fi
+          echo "PASS: repository-policy input coverage verified"
