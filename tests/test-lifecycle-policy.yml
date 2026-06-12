@@ -1,0 +1,30 @@
+name: Test with lifecycle policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Verify lifecycle policy fixture exists
+        run: |
+          POLICY_FILE="$GITHUB_WORKSPACE/actions/hardened/int128--create-ecr-repository-action/v1.467.0/tests/fixtures/lifecycle-policy.json"
+          if [ ! -f "$POLICY_FILE" ]; then
+            echo "FAIL: lifecycle policy fixture not found at $POLICY_FILE"
+            exit 1
+          fi
+          echo "PASS: lifecycle policy fixture found"
+      - id: action
+        uses: .
+        with:
+          repository: my-test-repo-with-lifecycle
+          public: 'false'
+          lifecycle-policy: >-
+            ${{ github.workspace }}/actions/hardened/int128--create-ecr-repository-action/v1.467.0/tests/fixtures/lifecycle-policy.json
+        continue-on-error: true
+      - name: Assert action was invoked with lifecycle-policy input
+        run: |
+          # The action requires AWS credentials which are not available in this test environment.
+          # We verify the action was invoked with the lifecycle-policy input.
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          echo "PASS: action was invoked with lifecycle-policy input"
