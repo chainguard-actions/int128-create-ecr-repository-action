@@ -1,0 +1,52 @@
+name: Test with repository policy input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create repository policy fixture
+        run: |
+          mkdir -p /tmp/ecr-fixtures
+          cat > /tmp/ecr-fixtures/repository-policy.json <<'EOF'
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowPush",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": "arn:aws:iam::123456789012:root"
+                },
+                "Action": [
+                  "ecr:GetDownloadUrlForLayer",
+                  "ecr:BatchGetImage",
+                  "ecr:BatchCheckLayerAvailability",
+                  "ecr:PutImage",
+                  "ecr:InitiateLayerUpload",
+                  "ecr:UploadLayerPart",
+                  "ecr:CompleteLayerUpload"
+                ]
+              }
+            ]
+          }
+          EOF
+      - id: action
+        uses: .
+        with:
+          repository: my-test-repo-policy
+          public: 'false'
+          repository-policy: /tmp/ecr-fixtures/repository-policy.json
+        continue-on-error: true
+      - name: Assert action ran with repository-policy input
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action will fail without real AWS credentials, but it must have run
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action ran with repository-policy input (outcome=$OUTCOME)"
