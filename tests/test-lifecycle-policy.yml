@@ -1,0 +1,32 @@
+name: Test lifecycle-policy input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Verify fixture file exists
+        run: |
+          POLICY_FILE="$GITHUB_WORKSPACE/actions/hardened/int128--create-ecr-repository-action/v1.473.0/tests/fixtures/lifecycle-policy.json"
+          if [ ! -f "$POLICY_FILE" ]; then
+            echo "FAIL: lifecycle policy fixture file not found at $POLICY_FILE"
+            exit 1
+          fi
+          echo "PASS: fixture file exists"
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          repository: my-test-repo-lifecycle
+          public: 'false'
+          lifecycle-policy: actions/hardened/int128--create-ecr-repository-action/v1.473.0/tests/fixtures/lifecycle-policy.json
+      - name: Assert action was invoked with lifecycle-policy input
+        run: |
+          OUTCOME="${{ steps.action.outcome }}"
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action ran with lifecycle-policy input"

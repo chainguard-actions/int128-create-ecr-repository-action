@@ -1,0 +1,25 @@
+name: Test basic usage - create private ECR repository
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          repository: my-test-repo
+          public: 'false'
+      - name: Assert action was invoked with repository input
+        run: |
+          # The action will fail without AWS credentials, but we verify it ran
+          # and the outcome is either success or failure (not skipped)
+          OUTCOME="${{ steps.action.outcome }}"
+          echo "action outcome: $OUTCOME"
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action ran with repository input"

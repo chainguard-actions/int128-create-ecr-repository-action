@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "scripts": {
+    "build": "ncc build --source-map --license licenses.txt src/main.ts",
+    "test": "vitest",
+    "check": "biome migrate --write && biome check --fix"
+  },
+  "type": "module",
+  "dependencies": {
+    "@actions/core": "3.0.1",
+    "@aws-sdk/client-ecr": "3.1063.0",
+    "@aws-sdk/client-ecr-public": "3.1063.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.4.16",
+    "@tsconfig/node24": "24.0.4",
+    "@types/node": "24.13.1",
+    "@vercel/ncc": "0.38.4",
+    "aws-sdk-client-mock": "4.1.0",
+    "pnpm": "11.5.2",
+    "typescript": "6.0.3",
+    "vitest": "4.1.8"
+  },
+  "packageManager": "pnpm@11.5.2"
+}
