@@ -16,6 +16,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v1.471.0 | [`v1.471.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.471.0) | [`74bd296`](https://github.com/int128/create-ecr-repository-action/commit/74bd296a7f71c9ba78e460bfb659df80fc8c4c46) |
 | v1.473.0 | [`v1.473.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.473.0) | — |
 | v1.479.0 | [`v1.479.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.479.0) | [`2b12bc8`](https://github.com/int128/create-ecr-repository-action/commit/2b12bc81e4ee9a3486af4c7f501e5bfebab6e111) |
+| v1.480.0 | [`v1.480.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.480.0) | [`e3f65ed`](https://github.com/int128/create-ecr-repository-action/commit/e3f65ed7a06521da09ac5cce5ecc705c03318cee) |
 
 ## Privacy
 
