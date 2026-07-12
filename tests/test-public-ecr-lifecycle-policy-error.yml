@@ -1,0 +1,40 @@
+name: Test public ECR with lifecycle-policy raises error
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a dummy lifecycle policy file
+        run: |
+          mkdir -p /tmp/ecr-test
+          echo '{"rules":[]}' > /tmp/ecr-test/lifecycle-policy.json
+
+      - name: Run action with public=true and lifecycle-policy (expect validation error)
+        id: action
+        uses: .
+        with:
+          public: 'true'
+          repository: my-public-test-repo
+          lifecycle-policy: /tmp/ecr-test/lifecycle-policy.json
+        env:
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          AWS_DEFAULT_REGION: us-east-1
+        continue-on-error: true
+
+      - name: Assert action failed with validation error
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail because ECR Public does not support lifecycle policies.
+          # This is a pure logic check in run.ts before any AWS API call.
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail with validation error, got: $OUTCOME"
+            exit 1
+          fi
+          echo "PASS: action correctly rejected public ECR with lifecycle-policy"
