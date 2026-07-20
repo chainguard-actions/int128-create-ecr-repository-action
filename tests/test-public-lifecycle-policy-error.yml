@@ -1,12 +1,16 @@
-name: Test public ECR with lifecycle-policy throws error
+name: Test public ECR with lifecycle-policy raises error
 on:
   workflow_dispatch:
-
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create a dummy lifecycle policy file
+        run: |
+          mkdir -p /tmp/ecr-test
+          echo '{"rules":[]}' > /tmp/ecr-test/lifecycle.json
 
       - id: action
         uses: .
@@ -14,24 +18,15 @@ jobs:
         with:
           public: 'true'
           repository: my-test-repo
-          lifecycle-policy: some-policy-file.json
+          lifecycle-policy: /tmp/ecr-test/lifecycle.json
 
-      - name: Assert action failed
-        run: |
-          echo "outcome: ${{ steps.action.outcome }}"
-          if [ "${{ steps.action.outcome }}" != "failure" ]; then
-            echo "FAIL: expected action to fail but it did not"
-            exit 1
-          fi
-          echo "PASS: action failed as expected"
-
-      - name: Assert failure message mentions lifecycle policy
+      - name: Assert action failed with expected error
         env:
-          CONCLUSION: ${{ steps.action.outcome }}
+          OUTCOME: ${{ steps.action.outcome }}
         run: |
-          echo "outcome: $CONCLUSION"
-          if [ "$CONCLUSION" != "failure" ]; then
-            echo "FAIL: expected failure outcome"
+          echo "outcome: $OUTCOME"
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected action to fail when public=true and lifecycle-policy is set"
             exit 1
           fi
-          echo "PASS: action correctly rejected lifecycle-policy for ECR Public"
+          echo "PASS: action correctly failed"
