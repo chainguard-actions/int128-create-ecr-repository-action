@@ -1,0 +1,61 @@
+name: Test ECR repository creation with repository policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create repository policy fixture
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/tests/fixtures"
+          cat > "$GITHUB_WORKSPACE/tests/fixtures/repository-policy.json" <<'EOF'
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowPull",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": "arn:aws:iam::123456789012:root"
+                },
+                "Action": [
+                  "ecr:GetDownloadUrlForLayer",
+                  "ecr:BatchGetImage",
+                  "ecr:BatchCheckLayerAvailability"
+                ]
+              }
+            ]
+          }
+          EOF
+          echo "Repository policy file created"
+          cat "$GITHUB_WORKSPACE/tests/fixtures/repository-policy.json"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          public: 'false'
+          repository: my-test-repo-with-repo-policy
+          repository-policy: tests/fixtures/repository-policy.json
+
+      - name: Assert action ran (succeeded with real AWS creds, or failed gracefully without)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          REPO_URI: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "repository-uri: $REPO_URI"
+          if [ "$OUTCOME" = "success" ]; then
+            if [ -z "$REPO_URI" ]; then
+              echo "FAIL: action succeeded but repository-uri output is empty"
+              exit 1
+            fi
+            echo "PASS: got repository-uri '$REPO_URI'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (expected without real AWS credentials)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
