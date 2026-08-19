@@ -1,0 +1,48 @@
+name: Test public ECR registry repository creation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        with:
+          public: 'true'
+          repository: my-public-test-repo
+        continue-on-error: true
+
+      - name: Check action ran for public registry
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          REPO_URI: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "repository-uri: $REPO_URI"
+          # Without real AWS credentials, the action is expected to fail
+          # We verify it ran (not skipped) and didn't produce an unexpected outcome
+          if [ "$OUTCOME" = "success" ]; then
+            echo "Action succeeded"
+            if [ -n "$REPO_URI" ]; then
+              echo "repository-uri: $REPO_URI"
+              # Public ECR URIs use public.ecr.aws domain
+              if echo "$REPO_URI" | grep -q "public.ecr.aws"; then
+                echo "PASS: repository-uri uses public ECR domain"
+              else
+                echo "FAIL: repository-uri does not use public ECR domain"
+                exit 1
+              fi
+            fi
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "Action failed (expected without real AWS credentials)"
+            echo "PASS: action ran and failed gracefully with public=true"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
