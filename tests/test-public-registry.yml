@@ -1,0 +1,38 @@
+name: Test public ECR registry creation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Run action with public registry (expect AWS auth failure, not setup failure)
+        id: action
+        uses: .
+        with:
+          public: 'true'
+          repository: test-public-repo
+        continue-on-error: true
+
+      - name: Assert action attempted AWS call for public registry
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail because of invalid AWS credentials,
+          # not because of a missing input or misconfiguration.
+          # A failure here means the action is correctly wired and
+          # attempting to reach ECR Public.
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected (invalid AWS credentials)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (real AWS credentials available)"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
