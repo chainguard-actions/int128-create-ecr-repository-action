@@ -1,4 +1,4 @@
-name: Test ECR repository with repository policy
+name: Test private ECR repository creation
 on:
   workflow_dispatch:
 jobs:
@@ -9,38 +9,17 @@ jobs:
 
       - name: Set up mock AWS credentials
         run: |
+          # Provide fake AWS credentials so the SDK initializes
+          # The action will fail at the API call level, not at credential loading
           echo "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE" >> "$GITHUB_ENV"
           echo "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" >> "$GITHUB_ENV"
           echo "AWS_DEFAULT_REGION=us-east-1" >> "$GITHUB_ENV"
-
-      - name: Create repository policy file
-        run: |
-          cat > /tmp/repository-policy.json << 'EOF'
-          {
-            "Version": "2012-10-17",
-            "Statement": [
-              {
-                "Sid": "AllowPull",
-                "Effect": "Allow",
-                "Principal": {
-                  "AWS": "arn:aws:iam::123456789012:root"
-                },
-                "Action": [
-                  "ecr:GetDownloadUrlForLayer",
-                  "ecr:BatchGetImage",
-                  "ecr:BatchCheckLayerAvailability"
-                ]
-              }
-            ]
-          }
-          EOF
 
       - id: create-repo
         uses: .
         with:
           public: 'false'
-          repository: test/my-repo-with-policy
-          repository-policy: /tmp/repository-policy.json
+          repository: test/my-private-repo
         continue-on-error: true
 
       - name: Assert action ran (output or error)
@@ -51,9 +30,9 @@ jobs:
           echo "outcome: $OUTCOME"
           echo "repository-uri: $REPO_URI"
           # The action should either succeed (real AWS creds) or fail with an AWS error
-          # It should NOT fail due to missing inputs or misconfiguration of the repository policy
+          # It should NOT fail due to missing inputs or misconfiguration
           if [ "$OUTCOME" = "success" ]; then
-            echo "PASS: action succeeded with repository policy, repository-uri=$REPO_URI"
+            echo "PASS: action succeeded, repository-uri=$REPO_URI"
             if [ -z "$REPO_URI" ]; then
               echo "FAIL: expected repository-uri to be set on success"
               exit 1

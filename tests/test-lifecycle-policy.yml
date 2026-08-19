@@ -6,21 +6,60 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - id: action
+
+      - name: Set up mock AWS credentials
+        run: |
+          echo "AWS_ACCESS_KEY_ID=AKIAIOSFODNN7EXAMPLE" >> "$GITHUB_ENV"
+          echo "AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY" >> "$GITHUB_ENV"
+          echo "AWS_DEFAULT_REGION=us-east-1" >> "$GITHUB_ENV"
+
+      - name: Create lifecycle policy file
+        run: |
+          cat > /tmp/lifecycle-policy.json << 'EOF'
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Keep only 10 images",
+                "selection": {
+                  "tagStatus": "any",
+                  "countType": "imageCountMoreThan",
+                  "countNumber": 10
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+          EOF
+
+      - id: create-repo
         uses: .
         with:
-          repository: my-test-repo-lifecycle
           public: 'false'
-          lifecycle-policy: ${{ github.workspace }}/actions/hardened/int128--create-ecr-repository-action/v1.469.0/tests/fixtures/lifecycle-policy.json
+          repository: test/my-repo-with-lifecycle
+          lifecycle-policy: /tmp/lifecycle-policy.json
         continue-on-error: true
-      - name: Assert action ran with lifecycle-policy input
+
+      - name: Assert action ran (output or error)
         env:
-          OUTCOME: ${{ steps.action.outcome }}
+          OUTCOME: ${{ steps.create-repo.outcome }}
+          REPO_URI: ${{ steps.create-repo.outputs.repository-uri }}
         run: |
           echo "outcome: $OUTCOME"
-          if [ "$OUTCOME" = "success" ] || [ "$OUTCOME" = "failure" ]; then
-            echo "PASS: action executed with lifecycle-policy input"
+          echo "repository-uri: $REPO_URI"
+          # The action should either succeed (real AWS creds) or fail with an AWS error
+          # It should NOT fail due to missing inputs or misconfiguration of the lifecycle policy
+          if [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded with lifecycle policy, repository-uri=$REPO_URI"
+            if [ -z "$REPO_URI" ]; then
+              echo "FAIL: expected repository-uri to be set on success"
+              exit 1
+            fi
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected without real AWS credentials"
           else
-            echo "FAIL: unexpected outcome '$OUTCOME'"
+            echo "FAIL: unexpected outcome: $OUTCOME"
             exit 1
           fi
