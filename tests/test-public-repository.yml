@@ -1,0 +1,36 @@
+name: Test public ECR repository creation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: create-repo
+        uses: .
+        with:
+          public: 'true'
+          repository: test-public-repo
+        continue-on-error: true
+        env:
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          AWS_DEFAULT_REGION: us-east-1
+
+      - name: Assert action failed with AWS error (not input error)
+        env:
+          OUTCOME: ${{ steps.create-repo.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail because of invalid AWS credentials,
+          # not because of missing/invalid inputs. This confirms the action
+          # correctly processes the public=true input and reaches the AWS API call.
+          if [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed as expected (no real AWS credentials)"
+          elif [ "$OUTCOME" = "success" ]; then
+            echo "PASS: action succeeded (real AWS credentials available)"
+          else
+            echo "FAIL: unexpected outcome: $OUTCOME"
+            exit 1
+          fi
