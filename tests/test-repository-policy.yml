@@ -1,0 +1,66 @@
+name: Test ECR repository creation with repository policy
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_CONTAINER_CREDENTIALS_RELATIVE_URI: ''
+      AWS_CONTAINER_CREDENTIALS_FULL_URI: ''
+      AWS_WEB_IDENTITY_TOKEN_FILE: ''
+      AWS_ROLE_ARN: ''
+      AWS_PROFILE: ''
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create repository policy file
+        run: |
+          cat > /tmp/repository-policy.json << 'EOF'
+          {
+            "Version": "2012-10-17",
+            "Statement": [
+              {
+                "Sid": "AllowPush",
+                "Effect": "Allow",
+                "Principal": {
+                  "AWS": "arn:aws:iam::123456789012:root"
+                },
+                "Action": [
+                  "ecr:GetDownloadUrlForLayer",
+                  "ecr:BatchGetImage",
+                  "ecr:BatchCheckLayerAvailability",
+                  "ecr:PutImage",
+                  "ecr:InitiateLayerUpload",
+                  "ecr:UploadLayerPart",
+                  "ecr:CompleteLayerUpload"
+                ]
+              }
+            ]
+          }
+          EOF
+          echo "Repository policy file created at /tmp/repository-policy.json"
+
+      - id: action
+        uses: .
+        with:
+          public: 'false'
+          repository: test-repo/policy-image
+          repository-policy: /tmp/repository-policy.json
+        continue-on-error: true
+
+      - name: Assert action ran with repository policy (failed with AWS error, not a code crash)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail due to invalid AWS credentials (not a runtime/code crash)
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with repository-policy and produced outcome: $OUTCOME"

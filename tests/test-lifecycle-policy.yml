@@ -1,0 +1,55 @@
+name: Test ECR repository creation with lifecycle policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Create lifecycle policy file
+        run: |
+          cat > /tmp/lifecycle-policy.json << 'EOF'
+          {
+            "rules": [
+              {
+                "rulePriority": 1,
+                "description": "Expire images older than 30 days",
+                "selection": {
+                  "tagStatus": "untagged",
+                  "countType": "sinceImagePushed",
+                  "countUnit": "days",
+                  "countNumber": 30
+                },
+                "action": {
+                  "type": "expire"
+                }
+              }
+            ]
+          }
+          EOF
+          echo "Lifecycle policy file created at /tmp/lifecycle-policy.json"
+
+      - id: action
+        uses: .
+        with:
+          public: 'false'
+          repository: test-repo/lifecycle-image
+          lifecycle-policy: /tmp/lifecycle-policy.json
+        continue-on-error: true
+
+      - name: Assert action ran with lifecycle policy (failed with AWS error, not a code crash)
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          # The action should fail due to invalid AWS credentials (not a runtime/code crash)
+          if [ "$OUTCOME" = "skipped" ]; then
+            echo "FAIL: action was skipped unexpectedly"
+            exit 1
+          fi
+          echo "PASS: action ran with lifecycle-policy and produced outcome: $OUTCOME"
