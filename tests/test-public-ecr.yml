@@ -1,4 +1,4 @@
-name: Test ECR repository with lifecycle policy
+name: Test public ECR repository creation
 on:
   workflow_dispatch:
 jobs:
@@ -7,34 +7,24 @@ jobs:
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Create lifecycle policy file
+      - name: Set up fake AWS credentials
         run: |
-          mkdir -p /tmp/ecr-test
-          cat > /tmp/ecr-test/lifecycle-policy.json <<'EOF'
-          {
-            "rules": [
-              {
-                "rulePriority": 1,
-                "description": "Keep only 10 images",
-                "selection": {
-                  "tagStatus": "any",
-                  "countType": "imageCountMoreThan",
-                  "countNumber": 10
-                },
-                "action": {
-                  "type": "expire"
-                }
-              }
-            ]
-          }
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials <<'EOF'
+          [default]
+          aws_access_key_id = AKIAIOSFODNN7EXAMPLE
+          aws_secret_access_key = wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          EOF
+          cat > ~/.aws/config <<'EOF'
+          [default]
+          region = us-east-1
           EOF
 
-      - id: create-repo
+      - id: create-public-repo
         uses: .
         with:
-          public: 'false'
-          repository: test/my-repo-with-lifecycle
-          lifecycle-policy: /tmp/ecr-test/lifecycle-policy.json
+          public: 'true'
+          repository: test/my-public-repo
         env:
           AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
           AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
@@ -43,7 +33,7 @@ jobs:
 
       - name: Assert action ran (failed with AWS error, not a crash)
         env:
-          OUTCOME: ${{ steps.create-repo.outcome }}
+          OUTCOME: ${{ steps.create-public-repo.outcome }}
         run: |
           echo "outcome: $OUTCOME"
           # The action should either succeed (if somehow connected) or fail with

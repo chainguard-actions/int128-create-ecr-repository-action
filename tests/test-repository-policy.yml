@@ -1,4 +1,4 @@
-name: Test with repository policy input
+name: Test repository-policy input
 on:
   workflow_dispatch:
 jobs:
@@ -6,15 +6,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-      - name: Create repository policy fixture
+
+      - name: Create fake repository policy file
         run: |
-          mkdir -p /tmp/ecr-fixtures
-          cat > /tmp/ecr-fixtures/repository-policy.json <<'EOF'
+          cat > /tmp/repository-policy.json << 'EOF'
           {
             "Version": "2012-10-17",
             "Statement": [
               {
-                "Sid": "AllowPush",
+                "Sid": "AllowPull",
                 "Effect": "Allow",
                 "Principal": {
                   "AWS": "arn:aws:iam::123456789012:root"
@@ -22,31 +22,34 @@ jobs:
                 "Action": [
                   "ecr:GetDownloadUrlForLayer",
                   "ecr:BatchGetImage",
-                  "ecr:BatchCheckLayerAvailability",
-                  "ecr:PutImage",
-                  "ecr:InitiateLayerUpload",
-                  "ecr:UploadLayerPart",
-                  "ecr:CompleteLayerUpload"
+                  "ecr:BatchCheckLayerAvailability"
                 ]
               }
             ]
           }
           EOF
+
       - id: action
         uses: .
         with:
-          repository: my-test-repo-policy
           public: 'false'
-          repository-policy: /tmp/ecr-fixtures/repository-policy.json
+          repository: test-repo-with-policy
+          repository-policy: /tmp/repository-policy.json
+        env:
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+          AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+          AWS_DEFAULT_REGION: us-east-1
         continue-on-error: true
+
       - name: Assert action ran with repository-policy input
         env:
           OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "outcome: $OUTCOME"
-          # The action will fail without real AWS credentials, but it must have run
+          # The action should either succeed or fail with an AWS credentials/auth error,
+          # but NOT be skipped — that would indicate the input was rejected at parse time.
           if [ "$OUTCOME" = "skipped" ]; then
-            echo "FAIL: action was skipped, expected it to run"
+            echo "FAIL: step was skipped unexpectedly"
             exit 1
           fi
           echo "PASS: action ran with repository-policy input (outcome=$OUTCOME)"
