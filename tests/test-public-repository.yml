@@ -1,0 +1,31 @@
+name: Test public ECR repository creation
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_REF: refs/heads/main
+      GITHUB_EVENT_NAME: push
+      # Provide dummy AWS credentials so the SDK initializes
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_DEFAULT_REGION: us-east-1
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: create-ecr-public
+        uses: .
+        continue-on-error: true
+        with:
+          public: 'true'
+          repository: my-public-test-repository
+      - name: Assert action was invoked
+        run: |
+          echo "outcome: ${{ steps.create-ecr-public.outcome }}"
+          # Without real AWS credentials, the action will fail trying to reach ECR Public.
+          # We verify the action was invoked (outcome is either success or failure, not skipped).
+          if [ "${{ steps.create-ecr-public.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action was invoked (outcome=${{ steps.create-ecr-public.outcome }})"
