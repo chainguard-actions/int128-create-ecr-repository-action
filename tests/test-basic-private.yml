@@ -1,4 +1,4 @@
-name: Test ECR repository creation with lifecycle policy
+name: Test basic private ECR repository creation
 on:
   workflow_dispatch:
 jobs:
@@ -11,8 +11,7 @@ jobs:
         continue-on-error: true
         with:
           public: 'false'
-          repository: my-test-repo-with-policy
-          lifecycle-policy: tests/fixtures/lifecycle-policy.json
+          repository: my-test-repo
       - name: Assert action ran (output set or failed gracefully without AWS credentials)
         env:
           OUTCOME: ${{ steps.action.outcome }}
