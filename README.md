@@ -1,55 +1,100 @@
-# int128/create-ecr-repository-action
+# create-ecr-repository-action [![ts](https://github.com/int128/create-ecr-repository-action/actions/workflows/ts.yaml/badge.svg)](https://github.com/int128/create-ecr-repository-action/actions/workflows/ts.yaml)
 
-Create Amazon ECR repository if not exist
+This is a GitHub Action to create a repository into Amazon ECR or ECR Public registry if it does not exist.
+It can put a lifecycle policy to the repository for cost saving.
 
-Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at [https://github.com/int128/create-ecr-repository-action](https://github.com/int128/create-ecr-repository-action).
 
-## Versions
+## Getting Started
 
-| Version | Tag | Upstream commit | Hardening report |
-|---------|-----|-----------------|------------------|
-| v1.466.0 | [`v1.466.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.466.0) | [`06cf82d`](https://github.com/int128/create-ecr-repository-action/commit/06cf82d0a6bc37a7ba4f91e1abba978c189258a5) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.466.0/HARDENING.md) |
-| v1.467.0 | [`v1.467.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.467.0) | [`92c24a2`](https://github.com/int128/create-ecr-repository-action/commit/92c24a28c21ff8f56d3d8ca491a9085b5d1fee85) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.467.0/HARDENING.md) |
-| v1.468.0 | [`v1.468.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.468.0) | [`1a3783c`](https://github.com/int128/create-ecr-repository-action/commit/1a3783cb0a100f36d97a2f02ac09a7060c3e02a3) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.468.0/HARDENING.md) |
-| v1.469.0 | [`v1.469.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.469.0) | [`75fc129`](https://github.com/int128/create-ecr-repository-action/commit/75fc129e197f5bab6b0db96a4c021e7e68191157) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.469.0/HARDENING.md) |
-| v1.470.0 | [`v1.470.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.470.0) | [`93fbdc6`](https://github.com/int128/create-ecr-repository-action/commit/93fbdc64f5c36507f1c409bd07c673f4d83b22d7) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.470.0/HARDENING.md) |
-| v1.471.0 | [`v1.471.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.471.0) | [`74bd296`](https://github.com/int128/create-ecr-repository-action/commit/74bd296a7f71c9ba78e460bfb659df80fc8c4c46) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.471.0/HARDENING.md) |
-| v1.473.0 | [`v1.473.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.473.0) | [`a1f5b8e`](https://github.com/int128/create-ecr-repository-action/commit/a1f5b8e9ff4120d8da642182d86c9299b0e6aa26) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.473.0/HARDENING.md) |
-| v1.476.0 | [`v1.476.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.476.0) | [`8f2ae1c`](https://github.com/int128/create-ecr-repository-action/commit/8f2ae1c9fe4865588c3efc6f1a918e39bf76b974) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.476.0/HARDENING.md) |
-| v1.477.0 | [`v1.477.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.477.0) | [`d30f5d3`](https://github.com/int128/create-ecr-repository-action/commit/d30f5d3d9282d43ee109a37d0904d33293f6adfc) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.477.0/HARDENING.md) |
-| v1.479.0 | [`v1.479.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.479.0) | [`2b12bc8`](https://github.com/int128/create-ecr-repository-action/commit/2b12bc81e4ee9a3486af4c7f501e5bfebab6e111) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.479.0/HARDENING.md) |
-| v1.480.0 | [`v1.480.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.480.0) | [`e3f65ed`](https://github.com/int128/create-ecr-repository-action/commit/e3f65ed7a06521da09ac5cce5ecc705c03318cee) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.480.0/HARDENING.md) |
-| v1.481.0 | [`v1.481.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.481.0) | [`b2168bf`](https://github.com/int128/create-ecr-repository-action/commit/b2168bf8c20f33057eccdb06e542b95f8206e5e9) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.481.0/HARDENING.md) |
-| v1.482.0 | [`v1.482.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.482.0) | [`e41cf76`](https://github.com/int128/create-ecr-repository-action/commit/e41cf766490c6e25c79521d10075dfd5e2367804) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.482.0/HARDENING.md) |
-| v1.483.0 | [`v1.483.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.483.0) | [`342d699`](https://github.com/int128/create-ecr-repository-action/commit/342d6990ec306b0e9be8c61076d6fec7cd147a2b) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.483.0/HARDENING.md) |
-| v1.484.0 | [`v1.484.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.484.0) | [`05dc9d4`](https://github.com/int128/create-ecr-repository-action/commit/05dc9d44bb2c29d0d3b0251db69ce79fdfd7b858) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.484.0/HARDENING.md) |
-| v1.486.0 | [`v1.486.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.486.0) | [`389bf78`](https://github.com/int128/create-ecr-repository-action/commit/389bf78a6fa0eaf49bbe594360ce4747e6eca173) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.486.0/HARDENING.md) |
-| v1.487.0 | [`v1.487.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.487.0) | [`2ffcb37`](https://github.com/int128/create-ecr-repository-action/commit/2ffcb37f30395c40c74c773ee7c876a449c70099) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.487.0/HARDENING.md) |
-| v1.488.0 | [`v1.488.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.488.0) | [`91df2c4`](https://github.com/int128/create-ecr-repository-action/commit/91df2c4aee9de915de6b3ce6ff93d31d2177dc5b) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.488.0/HARDENING.md) |
-| v1.489.0 | [`v1.489.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.489.0) | [`d83e253`](https://github.com/int128/create-ecr-repository-action/commit/d83e253720edf71ed37cfb7f4276abf04495c668) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.489.0/HARDENING.md) |
-| v1.490.0 | [`v1.490.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.490.0) | [`3499b67`](https://github.com/int128/create-ecr-repository-action/commit/3499b6767cee571d98a7b9cc3c343b68ec7c8d70) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.490.0/HARDENING.md) |
-| v1.491.0 | [`v1.491.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.491.0) | [`0f603d6`](https://github.com/int128/create-ecr-repository-action/commit/0f603d6a395f379b79aab35229115826262ec6a5) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.491.0/HARDENING.md) |
-| v1.492.0 | [`v1.492.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.492.0) | [`f2b2195`](https://github.com/int128/create-ecr-repository-action/commit/f2b2195f577d4ba1b864826b6b81960d27e7f7ee) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.492.0/HARDENING.md) |
-| v1.493.0 | [`v1.493.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.493.0) | [`a6c28f1`](https://github.com/int128/create-ecr-repository-action/commit/a6c28f1902c116b875db8a69a635af157ba63050) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.493.0/HARDENING.md) |
-| v1.494.0 | [`v1.494.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.494.0) | [`ccc03b7`](https://github.com/int128/create-ecr-repository-action/commit/ccc03b7530816b6e2ee20d306e03b5b60dee7174) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.494.0/HARDENING.md) |
-| v1.495.0 | [`v1.495.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.495.0) | [`5ad5eea`](https://github.com/int128/create-ecr-repository-action/commit/5ad5eea33cf9c86d37fcfdf9a7f0e84f97cc2f8d) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.495.0/HARDENING.md) |
-| v1.496.0 | [`v1.496.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.496.0) | [`162bb8d`](https://github.com/int128/create-ecr-repository-action/commit/162bb8d160db7629f467bbd5e64b683e5fabae4d) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.496.0/HARDENING.md) |
-| v1.497.0 | [`v1.497.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.497.0) | [`0783106`](https://github.com/int128/create-ecr-repository-action/commit/0783106afc399458ff5cad0ba57bdccc00901df4) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.497.0/HARDENING.md) |
-| v1.498.0 | [`v1.498.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.498.0) | [`65e4463`](https://github.com/int128/create-ecr-repository-action/commit/65e44638cb4f06f1c172bbb4dd2dd2c979d20a27) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.498.0/HARDENING.md) |
-| v1.499.0 | [`v1.499.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.499.0) | [`8ee21e1`](https://github.com/int128/create-ecr-repository-action/commit/8ee21e1d5d10e91dc6b1d5f71b7fff6f072e736e) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.499.0/HARDENING.md) |
-| v1.500.0 | [`v1.500.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.500.0) | [`09d229b`](https://github.com/int128/create-ecr-repository-action/commit/09d229bd40a77d7600d0f57069162f8d24e93cda) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.500.0/HARDENING.md) |
-| v1.501.0 | [`v1.501.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.501.0) | [`1457370`](https://github.com/int128/create-ecr-repository-action/commit/14573701bb5b00dc96fbca0a2c6e536efc87206f) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.501.0/HARDENING.md) |
-| v1.502.0 | [`v1.502.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.502.0) | [`4c0c63a`](https://github.com/int128/create-ecr-repository-action/commit/4c0c63a28473d2a383ef7bb9df8adf14e1cf36ea) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.502.0/HARDENING.md) |
-| v1.503.0 | [`v1.503.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.503.0) | [`a0af7c6`](https://github.com/int128/create-ecr-repository-action/commit/a0af7c6dbb4cd6a3057d211c2e08de99292f0166) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.503.0/HARDENING.md) |
-| v1.504.0 | [`v1.504.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.504.0) | [`c82d489`](https://github.com/int128/create-ecr-repository-action/commit/c82d489811265bc6b0b6c76980e1084f81827b62) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.504.0/HARDENING.md) |
-| v1.505.0 | [`v1.505.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.505.0) | [`8f9a484`](https://github.com/int128/create-ecr-repository-action/commit/8f9a484f049ae0eb6498a3e8e0aaf86150479269) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.505.0/HARDENING.md) |
-| v1.506.0 | [`v1.506.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.506.0) | [`ac420d3`](https://github.com/int128/create-ecr-repository-action/commit/ac420d3c0144c09a4fe3567dbb8aed526bd93608) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.506.0/HARDENING.md) |
-| v1.507.0 | [`v1.507.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.507.0) | [`221d1af`](https://github.com/int128/create-ecr-repository-action/commit/221d1af672e312649986668f7a0a1cd5dac445d0) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.507.0/HARDENING.md) |
-| v1.508.0 | [`v1.508.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.508.0) | [`14268c3`](https://github.com/int128/create-ecr-repository-action/commit/14268c38ee12324e917d1751525bd8a46ad21108) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.508.0/HARDENING.md) |
-| v1.509.0 | [`v1.509.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.509.0) | [`3b9c352`](https://github.com/int128/create-ecr-repository-action/commit/3b9c35249982937b39ff44a5ff0126f3eab19d7e) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.509.0/HARDENING.md) |
-| v1.510.0 | [`v1.510.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.510.0) | [`759d53d`](https://github.com/int128/create-ecr-repository-action/commit/759d53d50f26db62b9d1641843818b49ab04efda) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.510.0/HARDENING.md) |
-| v1.511.0 | [`v1.511.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.511.0) | [`63cf8f4`](https://github.com/int128/create-ecr-repository-action/commit/63cf8f414a58e926ca0131fc3d0fc9db812aa50f) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.511.0/HARDENING.md) |
-| v1.512.0 | [`v1.512.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.512.0) | [`dcaf0dd`](https://github.com/int128/create-ecr-repository-action/commit/dcaf0dd222b582bbc613bcee6b6f7b33e84c4d62) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.512.0/HARDENING.md) |
+To create a repository:
+
+```yaml
+jobs:
+  build:
+    steps:
+      - uses: int128/create-ecr-repository-action@v1
+        with:
+          repository: hello-world
+```
+
+If the repository exists, this action does nothing.
+
+
+### Put a lifecycle policy
+
+To create a repository with a lifecycle policy:
+
+```yaml
+      - uses: int128/create-ecr-repository-action@v1
+        with:
+          repository: hello-world
+          lifecycle-policy: config/lifecycle-policy.json
+```
+
+If the repository exists, this action just puts the lifecycle policy.
+
+
+### Create into ECR Public
+
+To create a repository into ECR Public registry:
+
+```yaml
+      - uses: int128/create-ecr-repository-action@v1
+        with:
+          repository: hello-world
+          public: true
+```
+
+If the repository exists, this action does nothing.
+Note that currently ECR Public does not support the lifecycle polocy.
+
+
+### Full example
+
+Here is a full example to build an image and put it into an ECR repository:
+
+```yaml
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::ACCOUNT:role/ROLE
+      - uses: aws-actions/amazon-ecr-login@v1
+      - uses: int128/create-ecr-repository-action@v1
+        id: ecr
+        with:
+          repository: ${{ github.repository }}
+      - uses: docker/metadata-action@v4
+        id: metadata
+        with:
+          images: ${{ steps.ecr.outputs.repository-uri }}
+      - uses: docker/build-push-action@v3
+        with:
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+```
+
+
+## Inputs
+
+| Name | Default | Description
+|------|---------|------------
+| `public` | `false` | Set `true` to create into ECR Public registry
+| `repository` | (required) | Repository name to create
+| `lifecycle-policy` | - | Path to a file of lifecycle policy for the repository
+| `repository-policy` | - |  Path to a file of repository policy for the repository
+
+## Outputs
+
+| Name | Description
+|------|------------
+| `repository-uri` | URI of the repository (in form of `ACCOUNT.dkr.ecr.REGION.amazonaws.com/NAME` or `public.ecr.aws/ID/NAME`)
 
 ## Privacy
 

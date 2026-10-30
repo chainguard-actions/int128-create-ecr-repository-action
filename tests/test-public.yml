@@ -1,0 +1,54 @@
+name: Test ECR Public repository
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: AKIAMOCKMOCKMOCKMOCK
+      AWS_SECRET_ACCESS_KEY: mock-secret-access-key
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_ENDPOINT_URL_ECR: http://127.0.0.1:4566
+      AWS_ENDPOINT_URL_ECR_PUBLIC: http://127.0.0.1:4566
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Start mock ECR server
+        run: |
+          rm -f /tmp/mock-ecr.ready /tmp/mock-ecr-calls.log
+          touch /tmp/mock-ecr-calls.log
+          nohup node "$GITHUB_WORKSPACE/tests/fixtures/mock-ecr.mjs" > /tmp/mock-ecr.out 2>&1 &
+          for i in $(seq 1 100); do
+            [ -f /tmp/mock-ecr.ready ] && break
+            sleep 0.1
+          done
+          cat /tmp/mock-ecr.out
+          [ -f /tmp/mock-ecr.ready ] || { echo "FAIL: mock server did not start"; exit 1; }
+      - id: action
+        uses: .
+        with:
+          public: 'true'
+          repository: public-repo
+      - name: Assert repository-uri
+        env:
+          ACTUAL: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "public.ecr.aws/mockalias/public-repo" ]; then
+            echo "FAIL: unexpected repository-uri"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert ECR Public API was used
+        run: |
+          cat /tmp/mock-ecr-calls.log
+          if ! grep -q '"op":"CreateRepository","isPublic":true' /tmp/mock-ecr-calls.log; then
+            echo "FAIL: ECR Public CreateRepository not called"
+            exit 1
+          fi
+          if grep -q '"isPublic":false' /tmp/mock-ecr-calls.log; then
+            echo "FAIL: private ECR API was called"
+            exit 1
+          fi
+          echo "PASS"

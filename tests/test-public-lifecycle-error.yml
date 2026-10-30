@@ -1,0 +1,55 @@
+name: Test ECR Public rejects lifecycle policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: AKIAMOCKMOCKMOCKMOCK
+      AWS_SECRET_ACCESS_KEY: mock-secret-access-key
+      AWS_EC2_METADATA_DISABLED: 'true'
+      AWS_ENDPOINT_URL_ECR: http://127.0.0.1:4566
+      AWS_ENDPOINT_URL_ECR_PUBLIC: http://127.0.0.1:4566
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Start mock ECR server
+        run: |
+          rm -f /tmp/mock-ecr.ready /tmp/mock-ecr-calls.log
+          touch /tmp/mock-ecr-calls.log
+          nohup node "$GITHUB_WORKSPACE/tests/fixtures/mock-ecr.mjs" > /tmp/mock-ecr.out 2>&1 &
+          for i in $(seq 1 100); do
+            [ -f /tmp/mock-ecr.ready ] && break
+            sleep 0.1
+          done
+          cat /tmp/mock-ecr.out
+          [ -f /tmp/mock-ecr.ready ] || { echo "FAIL: mock server did not start"; exit 1; }
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          public: 'true'
+          repository: public-repo
+          lifecycle-policy: tests/fixtures/lifecycle-policy.json
+      - name: Assert action failed without calling the API
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          URI: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "uri: $URI"
+          cat /tmp/mock-ecr-calls.log
+          if [ "$OUTCOME" != "failure" ]; then
+            echo "FAIL: expected failure, got '$OUTCOME'"
+            exit 1
+          fi
+          if [ -n "$URI" ]; then
+            echo "FAIL: repository-uri should not be set"
+            exit 1
+          fi
+          if [ -s /tmp/mock-ecr-calls.log ]; then
+            echo "FAIL: API should not have been called"
+            exit 1
+          fi
+          echo "PASS"
