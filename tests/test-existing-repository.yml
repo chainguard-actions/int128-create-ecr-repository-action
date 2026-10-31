@@ -1,0 +1,55 @@
+name: Test existing repository
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: AKIAMOCKMOCKMOCKMOCK
+      AWS_SECRET_ACCESS_KEY: mock-secret-access-key
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_ENDPOINT_URL_ECR: http://127.0.0.1:18081
+      AWS_ENDPOINT_URL: http://127.0.0.1:18081
+      MOCK_LOG: /tmp/mock-ecr-existing.jsonl
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Start mock ECR server
+        run: |
+          rm -f "$MOCK_LOG"
+          MOCK_PORT=18081 MOCK_EXISTING_REPOS=existing-repo \
+            setsid nohup node "$GITHUB_WORKSPACE/tests/fixtures/mock-ecr-server.cjs" > /tmp/mock-ecr-existing.out 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:18081/ >/dev/null; then echo "mock ready"; exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mock-ecr-existing.out
+          echo "FAIL: mock server did not start"
+          exit 1
+      - id: action
+        uses: .
+        with:
+          repository: existing-repo
+      - name: Assert repository-uri output
+        env:
+          ACTUAL: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "123456789012.dkr.ecr.us-east-1.amazonaws.com/existing-repo" ]; then
+            echo "FAIL: unexpected repository-uri"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert no CreateRepository call was made
+        run: |
+          cat "$MOCK_LOG"
+          if ! grep -q '"op":"DescribeRepositories"' "$MOCK_LOG"; then
+            echo "FAIL: DescribeRepositories was not called"
+            exit 1
+          fi
+          if grep -q '"op":"CreateRepository"' "$MOCK_LOG"; then
+            echo "FAIL: CreateRepository should not be called for an existing repository"
+            exit 1
+          fi
+          echo "PASS"
