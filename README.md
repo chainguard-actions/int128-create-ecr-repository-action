@@ -52,6 +52,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 | v1.512.0 | [`v1.512.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.512.0) | [`dcaf0dd`](https://github.com/int128/create-ecr-repository-action/commit/dcaf0dd222b582bbc613bcee6b6f7b33e84c4d62) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.512.0/HARDENING.md) |
 | v1.513.0 | [`v1.513.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.513.0) | [`46bb495`](https://github.com/int128/create-ecr-repository-action/commit/46bb495d89be539c40f9d1b997d3a5537ecc3124) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.513.0/HARDENING.md) |
 | v1.514.0 | [`v1.514.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.514.0) | [`2d22701`](https://github.com/int128/create-ecr-repository-action/commit/2d227010a3228ffec33c2e679bd76f9f512b36cd) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.514.0/HARDENING.md) |
+| v1.515.0 | [`v1.515.0`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/tree/v1.515.0) | [`23d0310`](https://github.com/int128/create-ecr-repository-action/commit/23d03102a9309774acbde6d7a6510fb06d71b322) | [`HARDENING.md`](https://github.com/chainguard-actions/int128-create-ecr-repository-action/blob/v1.515.0/HARDENING.md) |
 
 ## Privacy
 
