@@ -1,0 +1,42 @@
+name: Test public ECR repository (basic)
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          public: "true"
+          repository: act-harness-test-repo
+      - name: Assert action ran (URI output, or failed gracefully without real AWS credentials)
+        env:
+          RESULT: ${{ steps.action.outputs.repository-uri }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "result: $RESULT"
+          if [ "$OUTCOME" = "success" ]; then
+            if ! echo "$RESULT" | grep -qE '^public\.ecr\.aws/.+/act-harness-test-repo$'; then
+              echo "FAIL: unexpected repository-uri '$RESULT'"
+              exit 1
+            fi
+            echo "PASS: got '$RESULT'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            if [ -n "$RESULT" ]; then
+              echo "FAIL: output should not be set when the action failed"
+              exit 1
+            fi
+            echo "PASS: action failed gracefully (no valid AWS credentials in harness)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi

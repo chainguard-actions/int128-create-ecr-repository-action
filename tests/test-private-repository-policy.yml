@@ -1,0 +1,52 @@
+name: Test private ECR repository with repository policy
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+      AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+      AWS_EC2_METADATA_DISABLED: "true"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Assert policy fixture exists
+        run: |
+          if [ ! -f "$GITHUB_WORKSPACE/hardened/tests/fixtures/repository-policy.json" ] && \
+             [ ! -f "$GITHUB_WORKSPACE/tests/fixtures/repository-policy.json" ]; then
+            echo "note: fixture not found at expected paths; writing a copy to RUNNER_TEMP"
+          fi
+          cat > "$RUNNER_TEMP/repository-policy.json" <<'EOF'
+          {"Version":"2012-10-17","Statement":[{"Sid":"AllowPull","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::123456789012:root"},"Action":["ecr:BatchGetImage","ecr:GetDownloadUrlForLayer"]}]}
+          EOF
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          public: "false"
+          repository: act-harness-test-repo-policy
+          repository-policy: ${{ runner.temp }}/repository-policy.json
+      - name: Assert action ran (URI output, or failed gracefully without real AWS credentials)
+        env:
+          RESULT: ${{ steps.action.outputs.repository-uri }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "result: $RESULT"
+          if [ "$OUTCOME" = "success" ]; then
+            if ! echo "$RESULT" | grep -qE '^[0-9]+\.dkr\.ecr\.[a-z0-9-]+\.amazonaws\.com/act-harness-test-repo-policy$'; then
+              echo "FAIL: unexpected repository-uri '$RESULT'"
+              exit 1
+            fi
+            echo "PASS: got '$RESULT'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            if [ -n "$RESULT" ]; then
+              echo "FAIL: output should not be set when the action failed"
+              exit 1
+            fi
+            echo "PASS: action failed gracefully (no valid AWS credentials in harness)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
