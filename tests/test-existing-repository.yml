@@ -1,0 +1,50 @@
+name: Test existing private repository
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: AKIAMOCKMOCKMOCKMOCK
+      AWS_SECRET_ACCESS_KEY: mock-secret-access-key
+      AWS_REGION: us-east-1
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_EC2_METADATA_DISABLED: "true"
+      AWS_ENDPOINT_URL: http://127.0.0.1:4566
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Start mock ECR server (repository exists)
+        run: |
+          rm -f /tmp/mock-ecr.log
+          touch /tmp/mock-ecr.log
+          MOCK_MODE=exists nohup node "$GITHUB_WORKSPACE/tests/fixtures/mock-ecr-server.cjs" 4566 /tmp/mock-ecr.log > /tmp/mock-server.out 2>&1 &
+          for i in $(seq 1 30); do
+            if curl -s -o /dev/null http://127.0.0.1:4566/; then echo "mock up"; exit 0; fi
+            sleep 1
+          done
+          cat /tmp/mock-server.out
+          echo "FAIL: mock server did not start"
+          exit 1
+      - id: action
+        uses: .
+        with:
+          repository: my-app/existing
+      - name: Assert repository-uri
+        env:
+          ACTUAL: ${{ steps.action.outputs.repository-uri }}
+        run: |
+          echo "actual: $ACTUAL"
+          if [ "$ACTUAL" != "123456789012.dkr.ecr.us-east-1.amazonaws.com/my-app/existing" ]; then
+            echo "FAIL: unexpected repository-uri"
+            exit 1
+          fi
+          echo "PASS"
+      - name: Assert only DescribeRepositories was called
+        run: |
+          cat /tmp/mock-ecr.log
+          grep -q 'DescribeRepositories.*"my-app/existing"' /tmp/mock-ecr.log || { echo "FAIL: DescribeRepositories not called"; exit 1; }
+          if grep -qE 'CreateRepository|PutLifecyclePolicy|SetRepositoryPolicy' /tmp/mock-ecr.log; then
+            echo "FAIL: unexpected mutating call for an existing repository"
+            exit 1
+          fi
+          echo "PASS"
